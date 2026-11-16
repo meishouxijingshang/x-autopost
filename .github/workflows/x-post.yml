@@ -1,0 +1,40 @@
+name: X auto post
+
+on:
+  schedule:
+    # 各投稿枠の15分前（日本時間）に起動 → スクリプト内でランダムな分まで待機
+    # GitHubの時刻はUTC（日本時間 -9時間）
+    - cron: "45 22 * * *"  # JST 7:45  → 8時台に投稿
+    - cron: "45 0 * * *"   # JST 9:45  → 10時台に投稿
+    - cron: "45 2 * * *"   # JST 11:45 → 12時台に投稿
+    - cron: "45 8 * * *"   # JST 17:45 → 18時台に投稿
+    - cron: "45 11 * * *"  # JST 20:45 → 21時台に投稿
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "テストモード（待機・投稿しない）"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install tweepy
+      - run: python post.py
+        env:
+          DRY_RUN: ${{ inputs.dry_run || 'false' }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_SECRET: ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
